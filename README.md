@@ -19,8 +19,8 @@ A folder with .html files. These .html files must contain notes or text.
 - lynx
 
 # Usage
-´´´bash
-notesConverter <path/to/html/files> <2M,2000KB,2G>"
+```bash
+notesConverter <path/to/html/files> <2M,2000KB,2G>
 notesConverter ~/Downloads/exportedNotes 2M
 (will split the output.txt into 2MB files)
-´´´
+```
