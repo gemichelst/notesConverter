@@ -1,0 +1,86 @@
+#!/bin/bash
+# $1 = /path/to/the/directory/containing/html/files
+# $2 = (2M,2000KB,2G)
+
+html_dir=$1
+
+# Function to move HTML files
+# to the parent directory
+move_html_to_parent() {
+	local current_dir="$1"
+	# Find all HTML files in the current directory
+	find "$current_dir" -name "*.html" -exec mv {} "$current_dir/.." \;
+	# Recursively traverse subdirectories
+	for subdir in "$current_dir"/*/; do
+		[[ -d "$subdir" ]] && move_html_to_parent "$subdir"
+	done
+}
+
+usage() {
+	echo -e ""
+	echo -e "Usage:\n\notesConverter <path/to/html/files> <2M,2000KB,2G>"
+	echo -e "-------------------------------------------------"
+	echo -e "Example:\n\notesConverter ~/Downloads/exportedNotes 2M"
+	echo -e "\t(will split the output.txt into 2MB files)"
+	echo -e ""
+	exit 1
+}
+
+# Check if %1 is provided and exists
+if [[ -z "$1" ]]; then
+	usage
+# elif [[ -n "$1" ]]; then
+# 	usage
+else
+	echo -e ""
+	echo -e "MOVE HTML FILES..."
+	move_html_to_parent "$1"
+fi
+
+cd $1 && cd ..
+parent_dir=`pwd`
+echo -e "PARENT_DIR:\t$parent_dir"
+
+# Iterate through all HTML files in the directory
+for file in "$parent_dir"/*.html; do
+	# Extract the filename without extension
+	# Create the output file path
+	# Convert HTML to plain text using lynx
+	filename=$(basename "$file" .html)
+	output_file="$parent_dir/$filename.txt"
+	lynx -dump "$file" > "$output_file"
+done
+
+# Iterate through all TXT files in the directory
+for file in "$parent_dir"/*.txt; do
+	# Extract the filename without extension
+	# Create the output file path
+	# Convert HTML to plain text using lynx
+	filename=$(basename "$file" .txt)
+	output_file="$parent_dir/output.txt"
+	lynx -dump "$file" >> "$output_file"
+done
+
+
+# Check if $2 is provided else define
+if [[ -z "$2" ]]; then
+	splitby_file="2500KB"
+else
+	splitby_file="$2"
+fi
+
+# FILE MANAGEMENT
+mkdir html && mv *.html html/
+mkdir txt && mv *.txt txt/
+mv ./txt/output.txt ./
+
+input="$output_file"
+output="$input-split"
+echo -e "INPUT:\t$input"
+echo -e "OUTPUT:\t$output"
+echo -e "SPLIT_MB:\t$splitby_file"
+echo -e ""
+
+# split
+split -b $splitby_file -d "$input" "$output"
+exit 0
